@@ -1,3 +1,15 @@
+# Docker::FakeInit - Clean up child processes like init would
+# Copyright (C) 2017 Steven Pritchard <steve@silug.org>
+#
+# Based on an idea by Steven Lembark.
+#
+# This program is free software; you can redistribute it
+# and/or modify it under the same terms as Perl itself.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 package Docker::FakeInit;
 
 use strict;
@@ -44,3 +56,31 @@ INIT {
 }
 
 1;
+__END__
+
+=head1 NAME
+
+Docker::FakeInit - Clean up child processes like init would
+
+=head1 SYNOPSIS
+
+  use Docker::FakeInit;
+
+=head1 DESCRIPTION
+
+Since the entrypoint for Docker containers runs as PID 1, your script needs to reap
+children the way that init would, otherwise you will end up with zombie
+processes inside your container.  This module forks (so that your code runs
+unmodified), then sets up signal handlers to catch SIGCHLD or pass the signals
+through to the original script as appropriate.  When your script exits, the fake
+init process exits.
+
+=head1 AUTHOR
+
+Steven Pritchard <steve@silug.org>
+
+=head1 SEE ALSO
+
+init(1), docker(1).
+
+=cut
