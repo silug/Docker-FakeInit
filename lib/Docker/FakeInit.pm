@@ -15,7 +15,7 @@ INIT {
 
     our $pid=fork();
 
-    if ($pid == -1) {
+    if (!defined($pid)) {
         # fork() failed
         carp "fork() failed: $!. Not setting up SIGCHLD handler.";
     } elsif ($pid == 0) {
