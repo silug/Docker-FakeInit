@@ -20,19 +20,6 @@ INIT {
         carp "fork() failed: $!. Not setting up SIGCHLD handler.";
     } elsif ($pid == 0) {
         # In the child.
-        # Attempt to set up a new process group.
-        if (!defined(setpgid(0, 0))) {
-            carp "setpgid() failed: $!";
-        }
-
-        # Attempt to grab the terminal.
-        for my $fd (*STDIN, *STDOUT, *STDERR) {
-            next if (!defined($fd->fileno));
-
-            if (!defined(tcsetpgrp($fd->fileno, getpgrp()))) {
-                carp("tcsetpgrp() failed: $!") unless ($! == ENOTTY);
-            }
-        }
     } else {
         # In the parent
         my @signals=qw(HUP INT QUIT USR1 USR2 PIPE TERM TSTP TTIN TTOU WINCH);
@@ -52,6 +39,7 @@ INIT {
             my $kid;
             do { $kid=waitpid(-1, WNOHANG); } while ($kid > 0);
         }
+        exit 0;
     }
 }
 
