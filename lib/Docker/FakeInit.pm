@@ -25,12 +25,12 @@ our $VERSION=0.01;
 INIT {
     our $break=0;
 
-    our $pid=fork();
+    our $child=fork();
 
-    if (!defined($pid)) {
+    if (!defined($child)) {
         # fork() failed
         carp "fork() failed: $!. Not setting up SIGCHLD handler.";
-    } elsif ($pid == 0) {
+    } elsif ($child == 0) {
         # In the child.
     } else {
         # In the parent
@@ -41,11 +41,11 @@ INIT {
         $SIG{'CHLD'}=sub { $break=0 };
         $SIG{'ALRM'}=sub { $break=0 };
 
-        while (kill(0, $pid)) {
+        while (kill(0, $child)) {
             # Child is still alive
             alarm(10); # Wake up every 10 seconds to check for zombies
             pause; # Wait for a signal
-            kill($break, $pid) if ($break); # Pass HUP/INT/QUIT/TERM on to child
+            kill($break, $child) if ($break); # Pass HUP/INT/QUIT/TERM on to child
 
             # Reap any dead children
             my $kid;
