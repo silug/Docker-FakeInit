@@ -18,7 +18,7 @@ use warnings;
 use Carp;
 use IO::Handle;
 
-use POSIX qw(setpgid tcsetpgrp pause :sys_wait_h :errno_h);
+use POSIX qw(pause :sys_wait_h);
 
 our $VERSION=0.01;
 
