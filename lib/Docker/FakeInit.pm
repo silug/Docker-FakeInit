@@ -23,9 +23,10 @@ use POSIX qw(setpgid tcsetpgrp pause :sys_wait_h :errno_h);
 our $VERSION=0.01;
 
 INIT {
-    our $break=0;
+    my $break=0;
+    my $exitstatus=0;
 
-    our $child=fork();
+    my $child=fork();
 
     if (!defined($child)) {
         # fork() failed
@@ -34,12 +35,15 @@ INIT {
         # In the child.
     } else {
         # In the parent
+        sub interrupt {
+            $break=shift;
+        }
+
         my @signals=qw(HUP INT QUIT USR1 USR2 PIPE TERM TSTP TTIN TTOU WINCH);
         for my $signal (@signals) {
-            $SIG{$signal}=sub { ($break)=@_ };
+            $SIG{$signal}=\&interrupt;
         }
-        $SIG{'CHLD'}=sub { $break=0 };
-        $SIG{'ALRM'}=sub { $break=0 };
+        $SIG{'CHLD'}=$SIG{'ALRM'}=sub { $break=0 };
 
         while (kill(0, $child)) {
             # Child is still alive
@@ -48,10 +52,15 @@ INIT {
             kill($break, $child) if ($break); # Pass HUP/INT/QUIT/TERM on to child
 
             # Reap any dead children
-            my $kid;
-            do { $kid=waitpid(-1, WNOHANG); } while ($kid > 0);
+            my $pid;
+            do { $pid=waitpid(-1, WNOHANG); } while ($pid > 0);
+
+            if ($pid == $child) {
+                $exitstatus=$?;
+                exit $exitstatus;
+            }
         }
-        exit 0;
+        exit $exitstatus;
     }
 }
 
